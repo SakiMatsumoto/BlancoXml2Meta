@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- blancoCalcParser define file for blancoMeta2Xml -->
+<blanco version="0.1.0">
+  <target name="blancoCalcParser">
+    <blancocalcparser name="meta2xml">
+      <propertyblock name="blancometa2xml-process-common" waitY="1">
+        <startstring>メタファイル-XML変換処理定義・共通</startstring>
+        <propertykey name="name" waitX="2">
+          <value>クラス名</value>
+        </propertykey>
+        <propertykey name="package" waitX="2">
+          <value>パッケージ</value>
+        </propertykey>
+        <propertykey name="description" waitX="2">
+          <value>説明</value>
+        </propertykey>
+        <propertykey name="fileDescription" waitX="2">
+          <value>ファイル説明</value>
+        </propertykey>
+
+        <propertykey name="convertDefFile" waitX="2">
+          <value>変換定義ファイル</value>
+        </propertykey>
+      </propertyblock>
+
+      <propertyblock name="blancometa2xml-process-metadirectory" waitY="1">
+        <startstring>メタファイル-XML変換処理定義・メタディレクトリ</startstring>
+        <propertykey name="inputFileExt" waitX="2">
+          <value>入力ファイル拡張子</value>
+        </propertykey>
+        <propertykey name="outputFileExt" waitX="2">
+          <value>出力ファイル拡張子</value>
+        </propertykey>
+        <propertykey name="inputFileExtSub" waitX="2">
+          <value>入力ファイル拡張子Sub</value>
+        </propertykey>
+        <!-- added by KINOKO 除外ファイルの設定-->
+        <propertykey name="excludedFileRegex" waitX="2">
+          <value>除外すべきファイルの正規表現</value>
+        </propertykey>
+      </propertyblock>
+
+    </blancocalcparser>
+  </target>
+</blanco>
