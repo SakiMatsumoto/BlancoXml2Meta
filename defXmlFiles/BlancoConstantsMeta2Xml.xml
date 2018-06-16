@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- blancoCalcParser define file for blancoConstants -->
+<blanco version="0.1.0">
+  <target name="blancoCalcParser">
+    <blancocalcparser name="constants">
+      <propertyblock name="blancoconstants-common" waitY="1">
+        <startstring>定数定義・共通</startstring>
+        <propertykey name="name" waitX="2">
+          <value>定数定義ID</value>
+          <value>クラス名</value>
+        </propertykey>
+        <propertykey name="package" waitX="2">
+          <value>パッケージ</value>
+        </propertykey>
+        <propertykey name="description" waitX="2">
+          <value>説明</value>
+        </propertykey>
+        <propertykey name="suffix" waitX="2">
+          <value>サフィックス</value>
+        </propertykey>
+        <propertykey name="access" waitX="2">
+          <value>アクセス</value>
+        </propertykey>
+        <propertykey name="abstract" waitX="2">
+          <value>抽象クラス</value>
+        </propertykey>
+        <propertykey name="adjustConstValue" waitX="2">
+          <value>定数値の変形</value>
+        </propertykey>
+
+        <valuemapping>
+          <result>true</result>
+          <source>○</source>
+        </valuemapping>
+      </propertyblock>
+
+      <propertyblock name="blancoconstants-extends" waitY="1">
+        <startstring>定数定義・継承</startstring>
+        <propertykey name="name" waitX="2">
+          <value>クラス名</value>
+        </propertykey>
+      </propertyblock>
+
+      <tableblock name="blancoconstants-list" waitY="2" titleheight="3" rowname="field">
+        <startstring>定数定義・一覧</startstring>
+
+        <tablecolumn name="no">
+          <value>No.</value>
+        </tablecolumn>
+        <tablecolumn name="name">
+          <value>フィールド名</value>
+        </tablecolumn>
+        <tablecolumn name="type">
+          <value>型</value>
+        </tablecolumn>
+        <tablecolumn name="value">
+          <value>値</value>
+        </tablecolumn>
+        <tablecolumn name="description">
+          <value>説明</value>
+        </tablecolumn>
+
+      </tableblock>
+
+    </blancocalcparser>
+  </target>
+</blanco>

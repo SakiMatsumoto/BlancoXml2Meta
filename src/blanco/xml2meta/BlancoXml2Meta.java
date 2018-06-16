@@ -1,133 +1,225 @@
 package blanco.xml2meta;
 
 import blanco.commons.util.BlancoXmlUtil;
-import blanco.meta2xml.valueobject.BlancoMeta2XmlStructure;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import blanco.xml2meta.valueobject.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.w3c.dom.*;
 
 import javax.xml.transform.dom.DOMResult;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
+/**
+ * 単一のXmlファイルを単一のMetaファイルに書き出す処理を定義します。
+ */
 public class BlancoXml2Meta {
-
     /**
-     * 自動生成するソースファイルの文字エンコーディング。
+     * BlancoXml2Metaが利用する変換定義情報
      */
-    private String fEncoding = null;
+    private BlancoXml2MetaDefStructure fDefStructure = null;
 
-    public void setEncoding(final String argEncoding) {
-        fEncoding = argEncoding;
+    public BlancoXml2Meta(BlancoXml2MetaDefStructure structure) {
+        this.fDefStructure = structure;
     }
 
     /**
-     * ValueObjectを表現するXMLファイルから Javaソースコードを自動生成します。
+     * XMLファイルからMetaファイルを自動生成します。
      *
-     * @param metaXmlSourceFile
-     *            ValueObjectに関するメタ情報が含まれているXMLファイル
-     * @param directoryTarget
-     *            ソースコード生成先ディレクトリ
+     * @param inputXmlFile
+     *            XMLファイル
+     * @param targetDirectory
+     *            Metaファイル生成先ディレクトリ
      * @throws IOException
      *             入出力例外が発生した場合
      */
-    public void process(final File metaXmlSourceFile, final File directoryTarget)
+    public void process(final File inputXmlFile, final File targetDirectory)
             throws IOException {
 
-        final DOMResult result = BlancoXmlUtil
-                .transformFile2Dom(metaXmlSourceFile);
+        System.out.println("XMLファイル: " + inputXmlFile.getName() + " を処理します");
 
-        final Node rootNode = result.getNode();
+        // 入力XmlからDomを生成
+        final DOMResult inputDom = BlancoXmlUtil.transformFile2Dom(inputXmlFile);
+
+        // 入力XMLを順にパースしていく作業
+        final Node rootNode = inputDom.getNode();
         if (rootNode instanceof Document) {
             // これが正常系。ドキュメントルートを取得
             final Document rootDocument = (Document) rootNode;
-            final NodeList listSheet = rootDocument
-                    .getElementsByTagName("sheet");
-            final int sizeListSheet = listSheet.getLength();
-            for (int index = 0; index < sizeListSheet; index++) {
-                final Element elementCommon = BlancoXmlUtil.getElement(
-                        listSheet.item(index), "blancometa2xml-process-common");
-                if (elementCommon == null) {
-                    // commonが無い場合にはスキップします。
-                    continue;
-                }
 
-                final String name = BlancoXmlUtil.getTextContent(elementCommon,
-                        "name");
-                if (name == null || name.trim().length() == 0) {
-                    continue;
-                }
-
-                expandSheet(elementCommon, directoryTarget);
+            // <workbook>があればworkbookを作る
+            final Element nodeWorkbook = BlancoXmlUtil.getElement(rootDocument, "workbook");
+            if(nodeWorkbook == null) {
+                return;
             }
+            System.out.println("Workbook found.");
+            Workbook workbook = new SXSSFWorkbook();
+
+            // 次に<sheet>がある
+            final NodeList nodeListSheet = rootDocument.getElementsByTagName("sheet");
+            final int sizeListSheet = nodeListSheet.getLength();
+            for (int index = 0; index < sizeListSheet; index++) {
+                // sheetを作る
+                final Element nodeSheet = (Element) nodeListSheet.item(index);
+                NamedNodeMap attrs = nodeSheet.getAttributes();
+                String sheetName = attrs.getNamedItem("name").getNodeValue();
+                Sheet sheet = workbook.createSheet(sheetName);
+                // sheetの中身を書き込む
+                System.out.println("sheet: " + sheetName + " を展開します");
+                expandSheet(nodeSheet, sheet);
+            }
+            FileOutputStream out = new FileOutputStream(targetDirectory.getPath() + "/" + inputXmlFile.getName() + ".xlsx");
+            workbook.write(out);
+            workbook.close();
+            out.close();
         }
     }
 
     /**
      * シートを展開します。
+     * DOMElement:sheet の中には、何もないか、property-blockか、table-blockがあるはず
      *
-     * @param elementCommon
-     *            現在処理しているCommonノード
-     * @param directoryTarget
-     *            出力先フォルダ。
+     * @param nodeSheet
+     *            sheetエレメント
+     * @param sheet
+     *            展開先のExcelシート
      */
-    private void expandSheet(final Element elementCommon,
-                             final File directoryTarget) {
-        final BlancoMeta2XmlStructure processStructure = new BlancoMeta2XmlStructure();
-        processStructure.setName(BlancoXmlUtil.getTextContent(elementCommon,
-                "name"));
-        processStructure.setPackage(BlancoXmlUtil.getTextContent(elementCommon,
-                "package"));
-        if (processStructure.getPackage() == null
-                || processStructure.getPackage().trim().length() == 0) {
-            throw new IllegalArgumentException("メタファイル-XML変換処理定義 クラス名["
-                    + processStructure.getName() + "]のパッケージが指定されていません。");
-        }
+    private void expandSheet(final Element nodeSheet, final Sheet sheet) {
 
-        if (BlancoXmlUtil.getTextContent(elementCommon, "description") != null) {
-            processStructure.setDescription(BlancoXmlUtil.getTextContent(
-                    elementCommon, "description"));
-        }
-        if (BlancoXmlUtil.getTextContent(elementCommon, "fileDescription") != null) {
-            processStructure.setFileDescription(BlancoXmlUtil.getTextContent(
-                    elementCommon, "fileDescription"));
-        }
+        int rowCount = 2;
 
-        processStructure.setConvertDefFile(BlancoXmlUtil.getTextContent(
-                elementCommon, "convertDefFile"));
-        if (processStructure.getConvertDefFile() == null
-                || processStructure.getConvertDefFile().trim().length() == 0) {
-            throw new IllegalArgumentException("メタファイル-XML変換処理定義 クラス名["
-                    + processStructure.getName() + "]の変換定義ファイルが指定されていません。");
-        }
+        // 定義書の情報defStructureから、propertyblockとtableblockを得る
+        List<BlancoXml2MetaDefBlock> blocks = fDefStructure.getBlocks();
 
-        if (BlancoXmlUtil.getTextContent(elementCommon, "inputFileExt") != null) {
-            processStructure.setInputFileExt(BlancoXmlUtil.getTextContent(
-                    elementCommon, "inputFileExt"));
+        if(blocks != null) {
+            for (BlancoXml2MetaDefBlock block: blocks) {
+                // 次にinputXmlの中から、各blockに紐付けられたelementの実体を探す
+                final NodeList blockEntitys = nodeSheet.getElementsByTagName(block.getName());
+                if (blockEntitys != null && blockEntitys.getLength() != 0) {
+                    System.out.println("プロパティブロック" + block.getName() + "を見つけました。展開します。");
+                    for (int index = 0; index < blockEntitys.getLength(); index++) {
+                        final Element element = (Element) blockEntitys.item(index);
+                        rowCount += expandBlock(block, element, sheet, rowCount);
+                    }
+                }
+            }
         }
-        if (BlancoXmlUtil.getTextContent(elementCommon, "outputFileExt") != null) {
-            processStructure.setOutputFileExt(BlancoXmlUtil.getTextContent(
-                    elementCommon, "outputFileExt"));
-        }
-        if (BlancoXmlUtil.getTextContent(elementCommon, "inputFileExtSub") != null) {
-            processStructure.setInputFileExtSub(BlancoXmlUtil.getTextContent(
-                    elementCommon, "inputFileExtSub"));
-        }
-        /* added by KINOKO */
-        if (BlancoXmlUtil.getTextContent(elementCommon, "excludedFileRegex") != null) {
-            processStructure.setExcludedFileRegex(BlancoXmlUtil.getTextContent(
-                    elementCommon, "excludedFileRegex"));
-        }
-
-        expandMeta(processStructure, directoryTarget);
     }
 
-    private void expandMeta(
-            final BlancoMeta2XmlStructure processStructure,
-            final File directoryTarget) {
-        System.out.println("xmlをMetaに展開します");
-
+    /**
+     * ブロックがpropertyblockかtableblockかを判断して各ブロックに処理を投げます。
+     *
+     * @param blockDef
+     *            blockの定義（propertyblockかtableblock）
+     * @param nodeBlock
+     *            blockの実体エレメント
+     * @param sheet
+     *            展開先のExcelシート
+     * @param startRow
+     *            シートに書き出すときの書き始めの行
+     */
+    private int expandBlock(BlancoXml2MetaDefBlock blockDef, Element nodeBlock, Sheet sheet, int startRow) {
+        if(blockDef instanceof BlancoXml2MetaDefPropertyBlock) {
+            BlancoXml2MetaDefPropertyBlock propertyBlock = (BlancoXml2MetaDefPropertyBlock) blockDef;
+            return expandPropertyBlock(propertyBlock, nodeBlock, sheet, startRow);
+        } else if(blockDef instanceof BlancoXml2MetaDefTableBlock) {
+            BlancoXml2MetaDefTableBlock tableBlock = (BlancoXml2MetaDefTableBlock) blockDef;
+            return expandTableBlock(tableBlock, nodeBlock, sheet, startRow);
+        }
+        return 0;
     }
 
+    /**
+     * propertyblockを処理します
+     *
+     * @param blockDef
+     *            blockの定義（propertyblock）
+     * @param nodeBlock
+     *            blockの実体エレメント
+     * @param sheet
+     *            展開先のExcelシート
+     * @param startRow
+     *            シートに書き出すときの書き始めの行
+     * @return この書き出しにより進んだExcelの行数
+     *
+     */
+    private int expandPropertyBlock(BlancoXml2MetaDefPropertyBlock blockDef, Element nodeBlock, Sheet sheet, int startRow) {
+        // プロパティブロックは定義書でpropertykeyに紐付けられた文字列をキーに持つ
+        int rowCount = 1;
+
+        // StartStringにあたるタイトルを書き込みます
+        Row titleRow = sheet.createRow(startRow + rowCount++);
+        Cell cell = titleRow.createCell(0);
+        cell.setCellValue(blockDef.getTitle().getName());
+
+        List<BlancoXml2MetaDefBlockItem> rowStructures = blockDef.getItems();
+        if(rowStructures != null) {
+            for(BlancoXml2MetaDefBlockItem rowStructure: rowStructures) {
+                Row row = sheet.createRow(startRow + rowCount++);
+                Cell nameCell = row.createCell(0);
+                nameCell.setCellValue(rowStructure.getName());
+                Cell valueCell = row.createCell(rowStructure.getWaitX());
+                valueCell.setCellValue(BlancoXmlUtil.getTextContent(nodeBlock, rowStructure.getId()));
+            }
+        }
+
+        return rowCount;
+    }
+
+    /**
+     * tableblockを処理します
+     *
+     * @param blockDef
+     *            blockの定義（tableblock）
+     * @param nodeBlock
+     *            blockの実体エレメント
+     * @param sheet
+     *            展開先のExcelシート
+     * @param startRow
+     *            シートに書き出すときの書き始めの行
+     * @return この書き出しにより進んだExcelの行数
+     */
+    private int expandTableBlock(BlancoXml2MetaDefTableBlock blockDef, Element nodeBlock, Sheet sheet, int startRow) {
+        // プロパティブロックは定義書でpropertykeyに紐付けられた文字列をキーに持つ
+        int rowCount = 1;
+
+        // StartStringにあたるタイトルを書き込みます
+        Row titleRow = sheet.createRow(startRow + rowCount++);
+        Cell titleCell = titleRow.createCell(0);
+        titleCell.setCellValue(blockDef.getTitle().getName());
+
+        // カラム名を書き出します
+        Row columnNameRow = sheet.createRow(startRow + rowCount++);
+        List<BlancoXml2MetaDefBlockItem> columnStructures = blockDef.getItems();
+        if(columnStructures != null) {
+            for(int index = 0; index < columnStructures.size(); index++) {
+                BlancoXml2MetaDefBlockItem colunmStructure = columnStructures.get(index);
+                Cell nameCell = columnNameRow.createCell(index);
+                nameCell.setCellValue(colunmStructure.getName());
+            }
+        }
+
+        // rownameで定義された一行分のデータを取り出して書き出す
+        // @todo: nodeから1行分のデータを取り出すとき、インデックス順になっているわけではないので、インデックス順を保証する
+        NodeList nodesOfRowData = nodeBlock.getElementsByTagName(blockDef.getRowname());
+        if(nodesOfRowData != null) {
+            for(int index = 0; index < nodesOfRowData.getLength(); index++) {
+                Element aNodeOfRow = (Element) nodesOfRowData.item(index);
+                Row row = sheet.createRow(startRow + rowCount++);
+                if(columnStructures != null) {
+                    for(int index2 = 0; index2 < columnStructures.size(); index2++) {
+                        BlancoXml2MetaDefBlockItem colunmStructure = columnStructures.get(index2);
+                        Cell cell = row.createCell(index2);
+                        cell.setCellValue(BlancoXmlUtil.getTextContent(aNodeOfRow, colunmStructure.getId()));
+                    }
+                }
+            }
+        }
+        return rowCount;
+    }
 }

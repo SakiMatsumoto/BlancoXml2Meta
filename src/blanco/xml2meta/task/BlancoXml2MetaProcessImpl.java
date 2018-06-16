@@ -12,9 +12,10 @@ package blanco.xml2meta.task;
 
 import blanco.xml2meta.BlancoXml2Meta;
 import blanco.xml2meta.BlancoXml2MetaConstants;
-import blanco.xml2meta.BlancoXml2MetaXml2JavaClass;
+import blanco.xml2meta.BlancoXml2MetaDefParser;
 import blanco.xml2meta.task.BlancoXml2MetaProcess;
 import blanco.xml2meta.task.valueobject.BlancoXml2MetaProcessInput;
+import blanco.xml2meta.valueobject.BlancoXml2MetaDefStructure;
 
 import javax.xml.transform.TransformerException;
 import java.io.File;
@@ -53,14 +54,16 @@ public class BlancoXml2MetaProcessImpl implements BlancoXml2MetaProcess {
             File fileTargetDir = new File(input.getTargetdir());
             fileTargetDir.mkdir();
 
+            final BlancoXml2MetaDefParser defParser = new BlancoXml2MetaDefParser();
+            final BlancoXml2MetaDefStructure structure = defParser.parse(fileDefXml);
+
+            final BlancoXml2Meta xml2meta = new BlancoXml2Meta(structure);
+
             // xml格納ディレクトリの中のxmlファイルを順に処理
             for (File xmlFile : xmlfiles) {
                 if (xmlFile.getName().endsWith(".xml") == false) {
                     continue;
                 }
-
-                final BlancoXml2Meta xml2meta = new BlancoXml2Meta();
-                xml2meta.setEncoding(input.getEncoding());
                 xml2meta.process(xmlFile, fileTargetDir);
             }
             return 0;

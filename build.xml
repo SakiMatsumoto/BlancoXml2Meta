@@ -122,7 +122,7 @@
 	
 	<!--prepareで作ったものは基本的に開発者以外触らない-->
 	<!--meta/programはprepareで使うもの-->
-	<target name="prepare">
+	<target name="meta">
 		<blancoanttask metadir="meta/prepare" encoding="${encoding}" />
 		<blancoconstants metadir="meta/prepare" encoding="${encoding}" />
 		<blancoresourcebundle metadir="meta/prepare" commenttimestamp="false" encoding="${encoding}" />
@@ -133,7 +133,7 @@
 	</target>
 	
 	<target name="xml2meta">
-		<xml2meta xmldir="xml" defxml="/Users/superkinoko/work/ueo/blancoXml2Meta/src/blanco/xml2meta/BlancoMeta2XmlMeta2Xml.xml" encoding="${encoding}" verbose="true" />
+		<xml2meta xmldir="tmp/constants" targetdir="meta/out" defxml="/Users/superkinoko/work/ueo/blancoXml2Meta/defXmlFiles/BlancoConstantsMeta2Xml.xml" encoding="${encoding}" verbose="true" />
 	</target>
 	
 	<target name="compile">
@@ -152,8 +152,9 @@
 		</javac>
 	</target>
 	
-	<!--<target name="build" depends="meta,compile,jar,pack">-->
-	<!--</target>-->
+	<target name="prepare" depends="clean, meta, compile, jar">
+		<copy file="blancoxml2meta-0.0.1.jar" todir="lib.ant" />
+	</target>
 
 	<target name="cleanblanco">
 		<delete dir="blanco" />
