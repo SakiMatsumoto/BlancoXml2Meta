@@ -173,7 +173,9 @@ public class BlancoXml2Meta {
                 // waitXの値を使ってセルを横方向に結合する
                 int waitX = rowStructure.getWaitX();
                 Cell valueCell = row.createCell(waitX);
-                sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), 0, waitX-1));
+                if(waitX > 1) {
+                    sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), 0, waitX - 1));
+                }
                 // セル結合した場合の罫線補完
                 for(int index = 1; index < waitX; index++) {
                     Cell dummyNameCell = row.createCell(index);
