@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- blancoCalcParser define file for blancoValueObject -->
+<blanco version="0.1.0">
+  <target name="blancoCalcParser">
+    <blancocalcparser name="valueobject">
+      <propertyblock name="blancovalueobject-common" waitY="1">
+        <startstring>バリューオブジェクト定義・共通</startstring>
+        <propertykey name="name" waitX="2">
+          <value>クラス名</value>
+        </propertykey>
+        <propertykey name="package" waitX="2">
+          <value>パッケージ</value>
+        </propertykey>
+        <propertykey name="description" waitX="2">
+          <value>説明</value>
+        </propertykey>
+        <propertykey name="access" waitX="2">
+          <value>アクセス</value>
+        </propertykey>
+        <propertykey name="abstract" waitX="2">
+          <value>抽象クラス</value>
+        </propertykey>
+        <propertykey name="generateToString" waitX="2">
+          <value>toStringメソッドの生成</value>
+        </propertykey>
+        <propertykey name="adjustFieldName" waitX="2">
+          <value>フィールド名の変形</value>
+        </propertykey>
+        <propertykey name="adjustDefaultValue" waitX="2">
+          <value>デフォルト値の変形</value>
+        </propertykey>
+
+        <valuemapping>
+          <result>true</result>
+          <source>○</source>
+        </valuemapping>
+      </propertyblock>
+
+      <propertyblock name="blancovalueobject-extends" waitY="1">
+        <startstring>バリューオブジェクト定義・継承</startstring>
+        <propertykey name="name" waitX="2">
+          <value>クラス名</value>
+        </propertykey>
+      </propertyblock>
+
+      <tableblock name="blancovalueobject-implements" waitY="2" titleheight="3" rowname="interface">
+        <startstring>バリューオブジェクト定義・実装</startstring>
+
+        <tablecolumn name="no">
+          <value>No.</value>
+        </tablecolumn>
+        <tablecolumn name="name">
+          <value>インタフェース名</value>
+        </tablecolumn>
+
+      </tableblock>
+
+      <tableblock name="blancovalueobject-list" waitY="2" titleheight="3" rowname="field">
+        <startstring>バリューオブジェクト定義・一覧</startstring>
+
+        <tablecolumn name="no">
+          <value>No.</value>
+        </tablecolumn>
+        <tablecolumn name="name">
+          <value>フィールド名</value>
+        </tablecolumn>
+        <tablecolumn name="type">
+          <value>型</value>
+        </tablecolumn>
+        <tablecolumn name="default">
+          <value>デフォルト</value>
+        </tablecolumn>
+        <tablecolumn name="description">
+          <value>説明</value>
+        </tablecolumn>
+
+      </tableblock>
+
+      <propertyblock name="blancovalueobjectphp-common" waitY="1">
+        <startstring>バリューオブジェクト定義(php)・共通</startstring>
+        <propertykey name="name" waitX="2">
+          <value>クラス名</value>
+        </propertykey>
+        <propertykey name="namespace" waitX="2">
+          <value>名前空間</value>
+        </propertykey>
+        <propertykey name="package" waitX="2">
+          <value>パッケージ</value>
+        </propertykey>
+        <propertykey name="description" waitX="2">
+          <value>説明</value>
+        </propertykey>
+        <propertykey name="fileDescription" waitX="2">
+          <value>ファイル説明</value>
+        </propertykey>
+      </propertyblock>
+
+      <propertyblock name="blancovalueobjectphp-extends" waitY="1">
+        <startstring>バリューオブジェクト定義(php)・継承</startstring>
+        <propertykey name="name" waitX="2">
+          <value>クラス名</value>
+        </propertykey>
+      </propertyblock>
+
+      <tableblock name="blancovalueobjectphp-list" waitY="2" titleheight="3" rowname="field">
+        <startstring>バリューオブジェクト定義(php)・一覧</startstring>
+
+        <tablecolumn name="no">
+          <value>No.</value>
+        </tablecolumn>
+        <tablecolumn name="name">
+          <value>フィールド名</value>
+        </tablecolumn>
+        <tablecolumn name="type">
+          <value>型</value>
+        </tablecolumn>
+        <tablecolumn name="generic">
+          <value>総称型</value>
+        </tablecolumn>
+        <tablecolumn name="default">
+          <value>デフォルト</value>
+        </tablecolumn>
+        <tablecolumn name="description">
+          <value>説明</value>
+        </tablecolumn>
+
+      </tableblock>
+
+    </blancocalcparser>
+  </target>
+</blanco>

@@ -120,6 +120,7 @@ public class BlancoXml2MetaDefParser {
             BlancoXml2MetaDefBlockItem item = parseBlockItem(aNodeOfItem);
             items.add(item);
         }
+        block.setColumnCount(items.size());
         block.setItems(items);
         return block;
     }

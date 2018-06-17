@@ -133,7 +133,7 @@
 	</target>
 	
 	<target name="xml2meta">
-		<xml2meta xmldir="tmp/constants" targetdir="meta/out" defxml="/Users/superkinoko/work/ueo/blancoXml2Meta/defXmlFiles/BlancoConstantsMeta2Xml.xml" encoding="${encoding}" verbose="true" />
+		<xml2meta xmldir="tmp/valueobject" targetdir="meta/out" defxml="/Users/superkinoko/work/ueo/blancoXml2Meta/defXmlFiles/BlancoValueObjectMeta2Xml.xml" encoding="${encoding}" verbose="true" />
 	</target>
 	
 	<target name="compile">

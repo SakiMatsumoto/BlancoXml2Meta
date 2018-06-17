@@ -2,11 +2,12 @@ package blanco.xml2meta;
 
 import blanco.commons.util.BlancoXmlUtil;
 import blanco.xml2meta.valueobject.*;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.w3c.dom.*;
 
 import javax.xml.transform.dom.DOMResult;
@@ -23,6 +24,8 @@ public class BlancoXml2Meta {
      * BlancoXml2Metaが利用する変換定義情報
      */
     private BlancoXml2MetaDefStructure fDefStructure = null;
+    private CellStyle borderStyle = null;
+    private CellStyle titleStyle = null;
 
     public BlancoXml2Meta(BlancoXml2MetaDefStructure structure) {
         this.fDefStructure = structure;
@@ -59,6 +62,8 @@ public class BlancoXml2Meta {
             }
             System.out.println("Workbook found.");
             Workbook workbook = new SXSSFWorkbook();
+            borderStyle = createBorderStyle(workbook);
+            titleStyle = createTitleStyle(workbook);
 
             // 次に<sheet>がある
             final NodeList nodeListSheet = rootDocument.getElementsByTagName("sheet");
@@ -156,6 +161,7 @@ public class BlancoXml2Meta {
         Row titleRow = sheet.createRow(startRow + rowCount++);
         Cell cell = titleRow.createCell(0);
         cell.setCellValue(blockDef.getTitle().getName());
+        cell.setCellStyle(titleStyle);
 
         List<BlancoXml2MetaDefBlockItem> rowStructures = blockDef.getItems();
         if(rowStructures != null) {
@@ -163,9 +169,27 @@ public class BlancoXml2Meta {
                 Row row = sheet.createRow(startRow + rowCount++);
                 Cell nameCell = row.createCell(0);
                 nameCell.setCellValue(rowStructure.getName());
-                Cell valueCell = row.createCell(rowStructure.getWaitX());
+                nameCell.setCellStyle(titleStyle);
+                // waitXの値を使ってセルを横方向に結合する
+                int waitX = rowStructure.getWaitX();
+                Cell valueCell = row.createCell(waitX);
+                sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), 0, waitX-1));
+                // セル結合した場合の罫線補完
+                for(int index = 1; index < waitX; index++) {
+                    Cell dummyNameCell = row.createCell(index);
+                    dummyNameCell.setCellStyle(titleStyle);
+                }
+
                 valueCell.setCellValue(BlancoXmlUtil.getTextContent(nodeBlock, rowStructure.getId()));
+                valueCell.setCellStyle(borderStyle);
             }
+        }
+        // タイトルのセル結合
+        sheet.addMergedRegion(new CellRangeAddress(titleRow.getRowNum(), titleRow.getRowNum(), 0, rowStructures.get(0).getWaitX()));
+        // セル結合した場合の罫線補完
+        for(int index = 1; index <= rowStructures.get(0).getWaitX(); index++) {
+            Cell dummyTitleCell = titleRow.createCell(index);
+            dummyTitleCell.setCellStyle(titleStyle);
         }
 
         return rowCount;
@@ -185,13 +209,21 @@ public class BlancoXml2Meta {
      * @return この書き出しにより進んだExcelの行数
      */
     private int expandTableBlock(BlancoXml2MetaDefTableBlock blockDef, Element nodeBlock, Sheet sheet, int startRow) {
-        // プロパティブロックは定義書でpropertykeyに紐付けられた文字列をキーに持つ
+        // テーブルブロックは定義書でtablekeyに紐付けられた文字列をキーに持つ
         int rowCount = 1;
 
         // StartStringにあたるタイトルを書き込みます
         Row titleRow = sheet.createRow(startRow + rowCount++);
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue(blockDef.getTitle().getName());
+        titleCell.setCellStyle(titleStyle);
+        // タイトルのセル結合
+        sheet.addMergedRegion(new CellRangeAddress(titleRow.getRowNum(), titleRow.getRowNum(), 0, blockDef.getColumnCount()-1));
+        // セル結合した場合の罫線補完
+        for(int index = 1; index < blockDef.getColumnCount(); index++) {
+            Cell dummyTitleCell = titleRow.createCell(index);
+            dummyTitleCell.setCellStyle(titleStyle);
+        }
 
         // カラム名を書き出します
         Row columnNameRow = sheet.createRow(startRow + rowCount++);
@@ -201,6 +233,7 @@ public class BlancoXml2Meta {
                 BlancoXml2MetaDefBlockItem colunmStructure = columnStructures.get(index);
                 Cell nameCell = columnNameRow.createCell(index);
                 nameCell.setCellValue(colunmStructure.getName());
+                nameCell.setCellStyle(titleStyle);
             }
         }
 
@@ -216,10 +249,39 @@ public class BlancoXml2Meta {
                         BlancoXml2MetaDefBlockItem colunmStructure = columnStructures.get(index2);
                         Cell cell = row.createCell(index2);
                         cell.setCellValue(BlancoXmlUtil.getTextContent(aNodeOfRow, colunmStructure.getId()));
+                        cell.setCellStyle(borderStyle);
                     }
                 }
             }
         }
         return rowCount;
+    }
+
+    private CellStyle createBorderStyle(Workbook wb) {
+        CellStyle borderStyle = wb.createCellStyle();
+        borderStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        borderStyle.setBorderTop(CellStyle.BORDER_THIN);
+        borderStyle.setBorderRight(CellStyle.BORDER_THIN);
+        borderStyle.setBorderLeft(CellStyle.BORDER_THIN);
+//        borderStyle.setBottomBorderColor(HSSFColor.BLACK.index);
+//        borderStyle.setLeftBorderColor(HSSFColor.BLACK.index);
+//        borderStyle.setRightBorderColor(HSSFColor.BLACK.index);
+//        borderStyle.setTopBorderColor(HSSFColor.BLACK.index);
+        return borderStyle;
+    }
+
+    private CellStyle createTitleStyle(Workbook wb) {
+        CellStyle style = wb.createCellStyle();
+        style.setBorderBottom(CellStyle.BORDER_THIN);
+        style.setBorderTop(CellStyle.BORDER_THIN);
+        style.setBorderRight(CellStyle.BORDER_THIN);
+        style.setBorderLeft(CellStyle.BORDER_THIN);
+//        borderStyle.setBottomBorderColor(HSSFColor.BLACK.index);
+//        borderStyle.setLeftBorderColor(HSSFColor.BLACK.index);
+//        borderStyle.setRightBorderColor(HSSFColor.BLACK.index);
+//        borderStyle.setTopBorderColor(HSSFColor.BLACK.index);
+        style.setFillPattern(CellStyle.SOLID_FOREGROUND);
+        style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+        return style;
     }
 }
