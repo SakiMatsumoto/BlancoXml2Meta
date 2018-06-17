@@ -1,6 +1,6 @@
-#BlancoXml2Metaの使用方法
+# BlancoXml2Metaの使用方法
 
-##準備
+## 準備
 1. 最新のblancoxml2meta-x.x.x.jarを入手します。  
 手元にない場合は、BlancoXml2Metaプロジェクトをダウンロードして、コマンドプロンプトで
 ```ant prepare```
@@ -22,7 +22,7 @@
 </target>
 ```
 
-##入力パラメータ
+## 入力パラメータ
 
 1. xmldir:(入力必須)   
  Excelファイルに変換したいXMLファイルがあるディレクトリ。
@@ -34,5 +34,5 @@
 1. defxml:(デフォルト meta/out)  
 生成されたExcelファイルの出力先フォルダ。
 
-##変換処理
+## 変換処理
 コマンドプロンプトで```ant xml2meta```と入力すると変換されます。
