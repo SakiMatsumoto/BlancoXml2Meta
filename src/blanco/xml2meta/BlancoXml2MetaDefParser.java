@@ -25,73 +25,119 @@ public class BlancoXml2MetaDefParser {
 
         // プロパティブロックのリストを得ます
         NodeList nodesOfProrertyBlock = ((Document) rootNode).getElementsByTagName("propertyblock");
-        if(nodesOfProrertyBlock != null) {
+
+        if(nodesOfProrertyBlock != null) { // propertyblockを見つけた
+            // ひとつずつpropertyblockを処理します
             for (int index = 0; index < nodesOfProrertyBlock.getLength(); index++) {
-                BlancoXml2MetaDefPropertyBlock block = new BlancoXml2MetaDefPropertyBlock();
                 Element aNodeOfBlock = (Element) nodesOfProrertyBlock.item(index);
-                NamedNodeMap attrs = aNodeOfBlock.getAttributes();
-                block.setName(attrs.getNamedItem("name").getNodeValue());
-                BlancoXml2MetaDefBlockTitle title = new BlancoXml2MetaDefBlockTitle();
-                title.setName(BlancoXmlUtil.getTextContent(aNodeOfBlock, "startstring"));
-//                title.setWaitX(Integer.parseInt(attrs.getNamedItem("waitX").getNodeValue()));
-//                title.setWaitY(Integer.parseInt(attrs.getNamedItem("waitY").getNodeValue()));
-                block.setTitle(title);
-                ArrayList<BlancoXml2MetaDefBlockItem> items = new ArrayList<BlancoXml2MetaDefBlockItem>();
-                NodeList nodesOfItem = aNodeOfBlock.getElementsByTagName("propertykey");
-                for (int index2 = 0; index2 < nodesOfItem.getLength(); index2++) {
-                    Element aNodeOfItem = (Element) nodesOfItem.item(index2);
-                    NamedNodeMap attrs2 = aNodeOfItem.getAttributes();
-                    BlancoXml2MetaDefBlockItem item = new BlancoXml2MetaDefBlockItem();
-                    item.setId(attrs2.getNamedItem("name").getNodeValue());
-//                    item.setWaitX(Integer.parseInt(attrs2.getNamedItem("waitX").getNodeValue()));
-//                    item.setWaitY(Integer.parseInt(attrs2.getNamedItem("waitY").getNodeValue()));
-                    item.setName(BlancoXmlUtil.getTextContent(aNodeOfItem, "value"));
-                    items.add(item);
-                }
-                block.setItems(items);
+                BlancoXml2MetaDefPropertyBlock block = parsePropertyBlock(aNodeOfBlock);
                 blocks.add(block);
             }
         }
 
         // テーブルブロックのリストを得ます
         NodeList nodesOfTableBlock = ((Document) rootNode).getElementsByTagName("tableblock");
-        if(nodesOfTableBlock != null) {
+
+        if(nodesOfTableBlock != null) { // tableblockを見つけた
+            //ひとつずつブロックを処理します
             for (int index = 0; index < nodesOfTableBlock.getLength(); index++) {
-
-                //ひとつずつブロックを処理します
-                BlancoXml2MetaDefTableBlock block = new BlancoXml2MetaDefTableBlock();
                 Element aNodeOfBlock = (Element) nodesOfTableBlock.item(index);
-                NamedNodeMap attrs = aNodeOfBlock.getAttributes();
-                block.setRowname(attrs.getNamedItem("rowname").getNodeValue());
-                block.setName(attrs.getNamedItem("name").getNodeValue());
-                BlancoXml2MetaDefBlockTitle title = new BlancoXml2MetaDefBlockTitle();
-                title.setName(BlancoXmlUtil.getTextContent(aNodeOfBlock, "startstring"));
-//                title.setWaitX(Integer.parseInt(attrs.getNamedItem("waitX").getNodeValue()));
-//                title.setWaitY(Integer.parseInt(attrs.getNamedItem("waitY").getNodeValue()));
-                block.setTitle(title);
-
-                // ブロックの中の<tablecolumn>を解析します
-                ArrayList<BlancoXml2MetaDefBlockItem> items = new ArrayList<BlancoXml2MetaDefBlockItem>();
-                NodeList nodesOfItem = aNodeOfBlock.getElementsByTagName("tablecolumn");
-                for (int index2 = 0; index2 < nodesOfItem.getLength(); index2++) {
-                    Element aNodeOfItem = (Element) nodesOfItem.item(index2);
-                    NamedNodeMap attrs2 = aNodeOfItem.getAttributes();
-                    BlancoXml2MetaDefBlockItem item = new BlancoXml2MetaDefBlockItem();
-                    item.setId(attrs2.getNamedItem("name").getNodeValue());
-//                    item.setWaitX(Integer.parseInt(attrs2.getNamedItem("waitX").getNodeValue()));
-//                    item.setWaitY(Integer.parseInt(attrs2.getNamedItem("waitY").getNodeValue()));
-                    item.setName(BlancoXmlUtil.getTextContent(aNodeOfItem, "value"));
-                    items.add(item);
-                }
-                block.setItems(items);
+                BlancoXml2MetaDefTableBlock block = parseTableBlock(aNodeOfBlock);
                 blocks.add(block);
             }
         }
 
         BlancoXml2MetaDefStructure structure = new BlancoXml2MetaDefStructure();
         structure.setBlocks(blocks);
-        System.out.println("ブロック数: " + blocks.size());
 
         return structure;
     }
+
+    private BlancoXml2MetaDefPropertyBlock parsePropertyBlock(Element aNodeOfBlock) {
+        BlancoXml2MetaDefPropertyBlock block = new BlancoXml2MetaDefPropertyBlock();
+        NamedNodeMap attrs = aNodeOfBlock.getAttributes();
+
+        // ブロックのID（必須要素）
+        block.setName(attrs.getNamedItem("name").getNodeValue());
+
+        // タイトル
+        BlancoXml2MetaDefBlockTitle title = new BlancoXml2MetaDefBlockTitle();
+        title.setName(BlancoXmlUtil.getTextContent(aNodeOfBlock, "startstring"));
+
+        Node nodeOfWaitX = attrs.getNamedItem("waitX");
+        if(nodeOfWaitX != null) {
+            title.setWaitX(Integer.parseInt(nodeOfWaitX.getNodeValue()));
+        }
+
+        Node nodeOfWaitY = attrs.getNamedItem("waitY");
+        if(nodeOfWaitY != null) {
+            title.setWaitY(Integer.parseInt(nodeOfWaitY.getNodeValue()));
+        }
+        block.setTitle(title);
+
+        // ブロックの中の<propertykey>を解析します
+        ArrayList<BlancoXml2MetaDefBlockItem> items = new ArrayList<BlancoXml2MetaDefBlockItem>();
+        NodeList nodesOfItem = aNodeOfBlock.getElementsByTagName("propertykey");
+        for (int index = 0; index < nodesOfItem.getLength(); index++) {
+            Element aNodeOfItem = (Element) nodesOfItem.item(index);
+            BlancoXml2MetaDefBlockItem item = parseBlockItem(aNodeOfItem);
+            items.add(item);
+        }
+        block.setItems(items);
+        return block;
+    }
+
+    private BlancoXml2MetaDefTableBlock parseTableBlock(Element aNodeOfBlock) {
+        BlancoXml2MetaDefTableBlock block = new BlancoXml2MetaDefTableBlock();
+        NamedNodeMap attrs = aNodeOfBlock.getAttributes();
+
+        // ブロックのID（必須要素）
+        block.setName(attrs.getNamedItem("name").getNodeValue());
+
+        // テーブルの独自要素rowname
+        block.setRowname(attrs.getNamedItem("rowname").getNodeValue());
+
+        // タイトル
+        BlancoXml2MetaDefBlockTitle title = new BlancoXml2MetaDefBlockTitle();
+        title.setName(BlancoXmlUtil.getTextContent(aNodeOfBlock, "startstring"));
+
+        Node nodeOfWaitX = attrs.getNamedItem("waitX");
+        if(nodeOfWaitX != null) {
+            title.setWaitX(Integer.parseInt(nodeOfWaitX.getNodeValue()));
+        }
+
+        Node nodeOfWaitY = attrs.getNamedItem("waitY");
+        if(nodeOfWaitY != null) {
+            title.setWaitY(Integer.parseInt(nodeOfWaitY.getNodeValue()));
+        }
+        block.setTitle(title);
+
+        // ブロックの中の<tablecolumn>を解析します
+        ArrayList<BlancoXml2MetaDefBlockItem> items = new ArrayList<BlancoXml2MetaDefBlockItem>();
+        NodeList nodesOfItem = aNodeOfBlock.getElementsByTagName("tablecolumn");
+        for (int index = 0; index < nodesOfItem.getLength(); index++) {
+            Element aNodeOfItem = (Element) nodesOfItem.item(index);
+            BlancoXml2MetaDefBlockItem item = parseBlockItem(aNodeOfItem);
+            items.add(item);
+        }
+        block.setItems(items);
+        return block;
+    }
+
+    private BlancoXml2MetaDefBlockItem parseBlockItem(Element aNodeOfItem) {
+        BlancoXml2MetaDefBlockItem item = new BlancoXml2MetaDefBlockItem();
+        NamedNodeMap attrs2 = aNodeOfItem.getAttributes();
+        item.setId(attrs2.getNamedItem("name").getNodeValue());
+        Node nodeWaitX = attrs2.getNamedItem("waitX");
+        if (nodeWaitX != null) {
+            item.setWaitX(Integer.parseInt(nodeWaitX.getNodeValue()));
+        }
+        Node nodeWaitY = attrs2.getNamedItem("waitY");
+        if (nodeWaitY != null) {
+            item.setWaitY(Integer.parseInt(nodeWaitY.getNodeValue()));
+        }
+        item.setName(BlancoXmlUtil.getTextContent(aNodeOfItem, "value"));
+        return item;
+    }
+
 }
