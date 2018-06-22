@@ -8,6 +8,8 @@ import org.w3c.dom.*;
 import javax.xml.transform.dom.DOMResult;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BlancoXml2MetaDefParser {
 
@@ -84,6 +86,16 @@ public class BlancoXml2MetaDefParser {
             items.add(item);
         }
         block.setItems(items);
+
+        // ブロックの中の<valuemapping>を解析します
+        Map<String, String> valuemapping = new HashMap<String, String>();
+        NodeList nodesOfValueMapping = aNodeOfBlock.getElementsByTagName("valuemapping");
+        for (int index = 0; index < nodesOfValueMapping.getLength(); index++) {
+            Element aNodeOfValueMapping = (Element) nodesOfValueMapping.item(index);
+            valuemapping.put(BlancoXmlUtil.getTextContent(aNodeOfValueMapping, "result"), BlancoXmlUtil.getTextContent(aNodeOfValueMapping, "source"));
+        }
+        block.setValueMapping(valuemapping);
+
         return block;
     }
 

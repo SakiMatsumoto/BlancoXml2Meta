@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="blancoXml2Meta" default="build" basedir=".">
 
-	<property name="version" value="1.0.0" />
+	<property name="version" value="1.0.2" />
 
 	<property name="project" value="blancoXml2Meta" />
 	<property name="project.lower" value="blancoxml2meta" />
@@ -133,7 +133,7 @@
 	</target>
 	
 	<target name="xml2meta">
-		<xml2meta xmldir="tmp/valueobject" targetdir="meta/out" defxml="/Users/superkinoko/work/ueo/blancoXml2Meta/defXmlFiles/BlancoValueObjectMeta2Xml.xml" encoding="${encoding}" verbose="true" />
+		<xml2meta xmldir="tmp/valueobject" targetdir="meta/out" defxml="/Users/superkinoko/work/ueo/blancoXml2Meta/defXmlFiles/BlancoValueObjectMeta2Xml.xml" verbose="true" />
 	</target>
 	
 	<target name="compile">
@@ -153,7 +153,7 @@
 	</target>
 	
 	<target name="prepare" depends="clean, meta, compile, jar">
-		<copy file="blancoxml2meta-0.0.1.jar" todir="lib.ant" />
+		<copy file="${project.main.jar}" todir="lib.ant" />
 	</target>
 
 	<target name="cleanblanco">
